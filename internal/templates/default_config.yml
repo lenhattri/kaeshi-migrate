@@ -1,0 +1,22 @@
+# Database connection and environment settings
+env: "development"  # set to "production" to enable Kafka logging
+user: "lenhattri" 
+
+
+database:
+  driver: postgres
+  # DSN: e.g. postgres://user:pass@host:5432/db?sslmode=disable
+  dsn: "postgres://user:pass@host:5432/db?sslmode=disable"
+
+# Logging settings
+logging:
+  level: "info"    # debug | info | warn | error
+  driver: "kafka"  # kafka | rabbitmq
+  file: ""         # optional log file path
+  kafka:
+    brokers:
+      - "localhost:9092"
+    topic: "logging"
+  rabbitmq:
+    url: "amqp://guest:guest@localhost:5672/"
+    queue: "logging"

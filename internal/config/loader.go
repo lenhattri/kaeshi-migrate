@@ -7,13 +7,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Load reads configuration from configs/config.yaml and environment variables.
-// Environment variables take precedence and should be in upper case with underscores.
-func Load() (*Config, error) {
+// Load reads configuration from the given file path and environment variables.
+// If path is empty, it defaults to ./configs/config.yml.
+// Environment variables prefixed with KAESHI_ take precedence.
+func Load(path string) (*Config, error) {
 	v := viper.New()
-	v.SetConfigName("config")
-	v.SetConfigType("yaml")
-	v.AddConfigPath("./configs")
+	if path != "" {
+		v.SetConfigFile(path)
+	} else {
+		v.SetConfigName("config")
+		v.SetConfigType("yaml")
+		v.AddConfigPath("./configs")
+	}
 	v.AutomaticEnv()
 	v.SetEnvPrefix("KAESHI")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

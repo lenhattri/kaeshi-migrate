@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	yesFlag bool
-	rootCmd *cobra.Command
+	yesFlag        bool
+	configPathFlag string
+	migrationsFlag string
+	rootCmd        *cobra.Command
 )
 
 // NewRootCmd builds the top-level command with global flags.
@@ -21,6 +23,8 @@ func NewRootCmd() *cobra.Command {
 		SilenceErrors: true,
 	}
 	rootCmd.PersistentFlags().BoolVarP(&yesFlag, "yes", "y", false, "automatic yes to prompts")
+	rootCmd.PersistentFlags().StringVar(&configPathFlag, "config", "configs/config.yml", "config file path")
+	rootCmd.PersistentFlags().StringVar(&migrationsFlag, "migrations", "migrations", "migrations directory")
 	return rootCmd
 }
 
@@ -38,3 +42,9 @@ func AskConfirmation(msg string) (bool, error) {
 	ans := strings.ToLower(strings.TrimSpace(line))
 	return ans == "y" || ans == "yes", nil
 }
+
+// ConfigPath returns the config file path from the global flag.
+func ConfigPath() string { return configPathFlag }
+
+// MigrationsDir returns the migrations directory from the global flag.
+func MigrationsDir() string { return migrationsFlag }

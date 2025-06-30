@@ -37,7 +37,13 @@ go build -o kaeshi ./cmd/migrate
 
 ### 2. Configure
 
-Edit `configs/config.yml`:
+First generate a config file and migrations folder:
+
+```bash
+./kaeshi init --config_path ./configs/config.yml --migrations ./migrations
+```
+
+Edit the generated `configs/config.yml`:
 
 ```yaml
 env: development

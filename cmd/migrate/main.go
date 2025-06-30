@@ -46,6 +46,7 @@ func main() {
 	)
 
 	rootCmd.PersistentFlags().StringVar(&userFlag, "user", "", "name executing the command")
+	rootCmd.AddCommand(appcmd.NewInitCmd())
 
 	// initApp lazily loads configuration and initializes the manager
 	initApp := func() error {
@@ -53,7 +54,7 @@ func main() {
 			return nil
 		}
 		var err error
-		cfg, err = config.Load()
+		cfg, err = config.Load(appcmd.ConfigPath())
 		if err != nil {
 			return err
 		}
@@ -75,7 +76,7 @@ func main() {
 		if !ok {
 			return fmt.Errorf("unknown database driver: %s", cfg.Database.Driver)
 		}
-		mgr, err = mgmt.NewManager(backend, cfg.Database.Dsn, "migrations", 3, log.WithField("component", "migrate"), userFlag, cfg.Env == "production", appcmd.AskConfirmation)
+		mgr, err = mgmt.NewManager(backend, cfg.Database.Dsn, appcmd.MigrationsDir(), 3, log.WithField("component", "migrate"), userFlag, cfg.Env == "production", appcmd.AskConfirmation)
 		if err != nil {
 			return err
 		}
@@ -105,7 +106,7 @@ func main() {
 				return err
 			}
 			defer db.Close()
-			file, err := migration.Generate("migrations", args[0], userFlag, db)
+			file, err := migration.Generate(appcmd.MigrationsDir(), args[0], userFlag, db)
 			if err != nil {
 				log.WithError(err).Error("generate migration file")
 				return err
