@@ -89,6 +89,7 @@ Build and explore the CLI:
 | `status`               | View current version and pending migrations |
 | `version`              | Print current migration version             |
 | `safe-force [version]` | Force rollback 1 step if DB is dirty        |
+| `init`                 | Generate config file and migrations directory|
 | `commit`               | Mark migrations as finalized and immutable  |
 
 Flags:
