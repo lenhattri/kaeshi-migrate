@@ -1,7 +1,5 @@
 # Kaeshi Migrate – Reliable and Auditable Database Migrations for Go
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/youruser/kaeshi)](https://goreportcard.com/report/github.com/youruser/kaeshi)
-[![Build Status](https://github.com/youruser/kaeshi/actions/workflows/go.yml/badge.svg)](https://github.com/youruser/kaeshi/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Kaeshi** is a safe and auditable database migration tool for Go projects.  
@@ -13,7 +11,7 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 
 - Generate migration files with automatic versioning and author tagging.
 - Validate SQL syntax for PostgreSQL, MySQL, and SQLite before execution.
-- Record all migration actions into `migrations_history`, including version, time, user, and optional hash.
+- Record all migration actions into `migrations_history`, including version, time, user, and hash.
 - Detect and prevent unauthorized edits to committed migrations.
 - Structured logging to file, stdout, Kafka, or RabbitMQ.
 - Prometheus metrics for observability in production environments.
