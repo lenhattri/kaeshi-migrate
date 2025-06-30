@@ -7,6 +7,15 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 
 ---
 
+## Dependencies
+
+- Go 1.23.4 or newer
+- PostgreSQL, MySQL, or SQLite (as your database)
+- Kafka or RabbitMQ (optional, for advanced logging)
+- Prometheus (optional, for metrics)
+
+---
+
 ## ✨ Key Features
 
 - Generate migration files with automatic versioning and author tagging.
@@ -21,7 +30,13 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 ---
 
 ## 📦 Getting Started
+### 0. Install Go on Linux/macOS (optional)
 
+```bash
+curl -LO https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+````
 ### 1. Install
 
 Clone and build:
@@ -80,17 +95,17 @@ Build and explore the CLI:
 
 ### Core commands
 
-| Command                | Description                                 |
-| ---------------------- | ------------------------------------------- |
-| `create [name]`        | Generate `.up.sql` and `.down.sql` files    |
-| `up`                   | Apply all pending migrations                |
-| `down`                 | Roll back all migrations                    |
-| `rollback`             | Roll back the most recent migration         |
-| `status`               | View current version and pending migrations |
-| `version`              | Print current migration version             |
-| `safe-force [version]` | Force rollback 1 step if DB is dirty        |
-| `init`                 | Generate config file and migrations directory|
-| `commit`               | Mark migrations as finalized and immutable  |
+| Command                | Description                                   |
+| ---------------------- | --------------------------------------------- |
+| `create [name]`        | Generate `.up.sql` and `.down.sql` files      |
+| `up`                   | Apply all pending migrations                  |
+| `down`                 | Roll back all migrations                      |
+| `rollback`             | Roll back the most recent migration           |
+| `status`               | View current version and pending migrations   |
+| `version`              | Print current migration version               |
+| `safe-force [version]` | Force rollback 1 step if DB is dirty          |
+| `init`                 | Generate config file and migrations directory |
+| `commit`               | Mark migrations as finalized and immutable    |
 
 Flags:
 
@@ -166,4 +181,5 @@ Database migrations are critical infrastructure changes. They deserve clear hist
 Kaeshi aims to bring **discipline and clarity** to schema changes in Go projects, enabling teams to move fast **without breaking production**.
 
 If you share that mindset, we’d love your feedback and contributions.
+
 
