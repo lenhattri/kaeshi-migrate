@@ -27,8 +27,8 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 Clone and build:
 
 ```bash
-git clone https://github.com/youruser/kaeshi.git
-cd kaeshi
+git clone https://github.com/lenhattri/kaeshi-migrate.git
+cd kaeshi-migrate
 go mod tidy
 go build -o kaeshi ./cmd/migrate
 ````
