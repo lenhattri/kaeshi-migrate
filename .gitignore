@@ -1,0 +1,67 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Output of go build
+/build/
+/bin/
+/dist/
+
+# Dependency directories (vendor/)
+vendor/
+
+# Test binary, coverage, benchmark, profiling
+*.test
+*.prof
+*.cov
+*.coverprofile
+*.profile
+*.pb.gz
+
+# Logs
+*.log
+*.log.*
+
+# IDE/editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# Go-specific
+go.sum
+go.work
+go.work.sum
+
+# Module caches
+/.gocache/
+/.gotmp/
+/tmp/
+
+# Misc
+.env
+.env.*
+*.local
+*.bak
+*.old
+*.orig
+*.rej
+
+# CLI tools configs (optional)
+.nodemon.json
+.watchmanconfig
+*.iml
+coverage.out

@@ -1,0 +1,25 @@
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  image: golang:1.24
+  services:
+    - name: postgres:15
+      alias: postgres
+  variables:
+    POSTGRES_USER: ci
+    POSTGRES_PASSWORD: ci
+    POSTGRES_DB: ci_db
+  script:
+    - go mod download
+    - DATABASE_URL=${DATABASE_URL:-postgres://ci:ci@postgres:5432/ci_db?sslmode=disable} go run ./cmd/migrate up
+    - go test ./...
+    - DATABASE_URL=${DATABASE_URL:-postgres://ci:ci@postgres:5432/ci_db?sslmode=disable} go run ./cmd/migrate down
+
+deploy:
+  stage: deploy
+  when: manual
+  script:
+    - DATABASE_URL=${DATABASE_URL} go run ./cmd/migrate up
