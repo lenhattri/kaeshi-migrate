@@ -13,7 +13,7 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 
 - Generate migration files with automatic versioning and author tagging.
 - Validate SQL syntax for PostgreSQL, MySQL, and SQLite before execution.
-- Record all migration actions into `migrations_history`, including version, time, user, and optional hash.
+- Record all migration actions into `migrations_history`, including version, time, user, and hash.
 - Detect and prevent unauthorized edits to committed migrations.
 - Structured logging to file, stdout, Kafka, or RabbitMQ.
 - Prometheus metrics for observability in production environments.
