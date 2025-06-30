@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	appcmd "github.com/lenhattri/kaeshi-migrate/cmd"
 	"github.com/golang-migrate/migrate/v4"
+	appcmd "github.com/lenhattri/kaeshi-migrate/cmd"
 	"github.com/spf13/cobra"
 
 	"github.com/lenhattri/kaeshi-migrate/internal/config"
@@ -38,52 +38,73 @@ func main() {
 
 	rootCmd := appcmd.NewRootCmd()
 
-	var userFlag string
-	rootCmd.PersistentFlags().StringVar(&userFlag, "user", "", "name executing the command")
-
-	// Load config
-	cfg, err := config.Load()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[FATAL] %v\n", err)
-		os.Exit(2)
-	}
-
-	// Fallback to config user if --user not passed
-	if userFlag == "" {
-		userFlag = cfg.User
-	}
-
-	log = logger.New(
-		cfg.Logging.Level,
-		cfg.Env,
-		cfg.Logging.Driver,
-		cfg.Logging.Kafka.Brokers,
-		cfg.Logging.Kafka.Topic,
-		cfg.Logging.RabbitMQ.URL,
-		cfg.Logging.RabbitMQ.Queue,
-		cfg.Logging.File,
+	var (
+		userFlag string
+		cfg      *config.Config
+		mgr      *mgmt.Manager
+		backend  mgmt.DBBackend
 	)
 
-	backend, ok := mgmt.GetBackend(cfg.Database.Driver)
-	if !ok {
-		log.WithField("driver", cfg.Database.Driver).Fatal("unknown database driver")
-		os.Exit(2)
+	rootCmd.PersistentFlags().StringVar(&userFlag, "user", "", "name executing the command")
+
+	// initApp lazily loads configuration and initializes the manager
+	initApp := func() error {
+		if mgr != nil {
+			return nil
+		}
+		var err error
+		cfg, err = config.Load()
+		if err != nil {
+			return err
+		}
+		if userFlag == "" {
+			userFlag = cfg.User
+		}
+		log = logger.New(
+			cfg.Logging.Level,
+			cfg.Env,
+			cfg.Logging.Driver,
+			cfg.Logging.Kafka.Brokers,
+			cfg.Logging.Kafka.Topic,
+			cfg.Logging.RabbitMQ.URL,
+			cfg.Logging.RabbitMQ.Queue,
+			cfg.Logging.File,
+		)
+		var ok bool
+		backend, ok = mgmt.GetBackend(cfg.Database.Driver)
+		if !ok {
+			return fmt.Errorf("unknown database driver: %s", cfg.Database.Driver)
+		}
+		mgr, err = mgmt.NewManager(backend, cfg.Database.Dsn, "migrations", 3, log.WithField("component", "migrate"), userFlag, cfg.Env == "production", appcmd.AskConfirmation)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
-	mgr, err := mgmt.NewManager(backend, cfg.Database.Dsn, "migrations", 3, log.WithField("component", "migrate"), userFlag, cfg.Env == "production", appcmd.AskConfirmation)
-	if err != nil {
-		log.WithError(err).Error("init manager")
-		os.Exit(2)
-	}
-	db, _ := sql.Open(backend.DriverName(), cfg.Database.Dsn)
+
+	defer func() {
+		if mgr != nil {
+			_ = mgr.Close()
+		}
+	}()
+
 	// ---- CREATE
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "create [name]",
 		Short: "Generate new migration files",
 		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return initApp()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if userFlag == "" {
 				return fmt.Errorf("--user or config.user is required")
 			}
+			db, err := sql.Open(backend.DriverName(), cfg.Database.Dsn)
+			if err != nil {
+				return err
+			}
+			defer db.Close()
 			file, err := migration.Generate("migrations", args[0], userFlag, db)
 			if err != nil {
 				log.WithError(err).Error("generate migration file")
@@ -107,6 +128,9 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "up",
 		Short: "Apply all pending migrations",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return initApp()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := mgr.Up()
 			switch {
@@ -127,6 +151,9 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "down",
 		Short: "Rollback all migrations (danger: prod)",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return initApp()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := mgr.Down()
 			if err != nil {
@@ -140,6 +167,9 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "rollback",
 		Short: "Rollback one migration step",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return initApp()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := mgr.Steps(-1)
 			if err != nil {
@@ -153,6 +183,9 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "commit",
 		Short: "Mark all applied migrations as committed",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return initApp()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := mgr.CommitAll(); err != nil {
 				log.WithError(err).Error("commit failed")
@@ -167,6 +200,9 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "status",
 		Short: "Show migration status",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return initApp()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v, pending, err := mgr.Status()
 			if err != nil {
@@ -182,6 +218,9 @@ func main() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Print current migration version",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return initApp()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v, dirty, err := mgr.Version()
 			if err != nil {
@@ -202,6 +241,9 @@ func main() {
 		Use:   "safe-force [version]",
 		Short: "Force to previous version only if dirty (Safe production use)",
 		Args:  cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return initApp()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v, err := strconv.Atoi(args[0])
 			if err != nil {

@@ -32,7 +32,7 @@ Clone and build:
 git clone https://github.com/youruser/kaeshi.git
 cd kaeshi
 go mod tidy
-go build -o kaeshi-migrate ./cmd/migrate
+go build -o kaeshi ./cmd/migrate
 ````
 
 ### 2. Configure
@@ -71,7 +71,7 @@ For example: `KAESHI_DATABASE_DSN=...`
 Build and explore the CLI:
 
 ```bash
-./kaeshi-migrate help
+./kaeshi help
 ```
 
 ### Core commands
