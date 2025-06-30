@@ -1,7 +1,5 @@
 # Kaeshi Migrate – Reliable and Auditable Database Migrations for Go
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/lenhattri/kaeshi-migrate)](https://goreportcard.com/report/github.com/lenhattri/kaeshi-migrate)
-[![Build Status](https://github.com/lenhattri/kaeshi/actions/workflows/go.yml/badge.svg)](https://github.com/lenhattri/kaeshi-migrate/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Kaeshi** is a safe and auditable database migration tool for Go projects.  
