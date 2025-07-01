@@ -12,7 +12,7 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 - Go 1.23.4 or newer
 - PostgreSQL, MySQL, or SQLite (as your database)
 - Kafka or RabbitMQ (optional, for advanced logging)
-- Prometheus (optional, for metrics)
+- Optional webhook notifications (Discord, Slack, generic)
 
 ---
 
@@ -23,7 +23,7 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 - Record all migration actions into `migrations_history`, including version, time, user, and hash.
 - Detect and prevent unauthorized edits to committed migrations.
 - Structured logging to file, stdout, Kafka, or RabbitMQ.
-- Prometheus metrics for observability in production environments.
+- Webhook notifications for migration events (Discord, Slack, generic).
 - Built-in safeguards for dirty database states (`safe-force` only steps back).
 - Integrated Makefile targets for smooth developer workflows.
 
@@ -78,6 +78,17 @@ logging:
   rabbitmq:
     url: "amqp://guest:guest@localhost:5672/"
     queue: logging
+
+notifier:
+  enabled: false
+  type: webhook
+  discord:
+    webhook_url: ""
+  slack:
+    webhook_url: ""
+  webhook:
+    url: ""
+    headers: {}
 ```
 
 You can override any config with environment variables prefixed by `KAESHI_`.
@@ -131,11 +142,10 @@ make migrate-force version=20240624 user=yourname
 
 ## 📊 Observability & Logging
 
-* **Prometheus Metrics**:
-
-  * `kaeshi_migrations_applied_total`
-  * `kaeshi_migrations_rolledback_total`
-  * `kaeshi_migration_duration_seconds`
+* **Notification Options**:
+  * Discord webhook
+  * Slack webhook
+  * Generic webhook URL
 
 * **Logging Options**:
 

@@ -54,5 +54,9 @@ func Load(path string) (*Config, error) {
 		cfg.Logging.File = "app.log"
 	}
 
+	if cfg.Notifier.Type == "" {
+		cfg.Notifier.Type = "webhook"
+	}
+
 	return &cfg, nil
 }

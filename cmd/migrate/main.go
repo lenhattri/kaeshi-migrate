@@ -15,6 +15,7 @@ import (
 	"github.com/lenhattri/kaeshi-migrate/internal/config"
 	migration "github.com/lenhattri/kaeshi-migrate/internal/migrate"
 	mgmt "github.com/lenhattri/kaeshi-migrate/internal/migrate/manager"
+	"github.com/lenhattri/kaeshi-migrate/notifier"
 	"github.com/lenhattri/kaeshi-migrate/pkg/logger"
 	"github.com/sirupsen/logrus"
 )
@@ -76,7 +77,12 @@ func main() {
 		if !ok {
 			return fmt.Errorf("unknown database driver: %s", cfg.Database.Driver)
 		}
-		mgr, err = mgmt.NewManager(backend, cfg.Database.Dsn, appcmd.MigrationsDir(), 3, log.WithField("component", "migrate"), userFlag, cfg.Env == "production", appcmd.AskConfirmation)
+		noteCfg := cfg.Notifier
+		if appcmd.NoNotify() {
+			noteCfg.Enabled = false
+		}
+		notifierInst := notifier.NewNotifier(noteCfg)
+		mgr, err = mgmt.NewManager(backend, cfg.Database.Dsn, appcmd.MigrationsDir(), 3, log.WithField("component", "migrate"), userFlag, cfg.Env == "production", appcmd.AskConfirmation, notifierInst)
 		if err != nil {
 			return err
 		}

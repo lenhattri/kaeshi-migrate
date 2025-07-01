@@ -13,33 +13,13 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/lenhattri/kaeshi-migrate/notifier"
 	"github.com/sirupsen/logrus"
 
 	"github.com/lenhattri/kaeshi-migrate/pkg/validate"
 )
 
-var (
-	migrationDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "migration_duration_seconds",
-		Help:    "Duration of migration operations",
-		Buckets: prometheus.DefBuckets,
-	})
-	migrationsApplied = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "migrations_applied_total",
-		Help: "Total number of migrations applied",
-	})
-	migrationsRollback = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "migrations_rollback_total",
-		Help: "Total number of migrations rolled back",
-	})
-)
-
-func init() {
-	prometheus.MustRegister(migrationDuration, migrationsApplied, migrationsRollback)
-}
-
-// Manager wraps golang-migrate with retries, metrics, logging, and resource handling.
+// Manager wraps golang-migrate with retries, logging, notifications, and resource handling.
 type Manager struct {
 	m             *migrate.Migrate
 	db            *sql.DB
@@ -51,11 +31,12 @@ type Manager struct {
 	dsn           string
 	backend       DBBackend
 	validateOpts  validate.ValidateOptions
+	notifier      notifier.Notifier
 }
 
 // NewManager creates a Manager. It limits DB pool to 1 connection to ensure advisory locks
 // (used internally by the Postgres driver) apply correctly.
-func NewManager(backend DBBackend, dsn, migrationsDir string, retries int, logger *logrus.Entry, actor string, strict bool, confirmFn validate.ConfirmFunc) (*Manager, error) {
+func NewManager(backend DBBackend, dsn, migrationsDir string, retries int, logger *logrus.Entry, actor string, strict bool, confirmFn validate.ConfirmFunc, note notifier.Notifier) (*Manager, error) {
 	db, err := sql.Open(backend.DriverName(), dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
@@ -91,6 +72,7 @@ func NewManager(backend DBBackend, dsn, migrationsDir string, retries int, logge
 			SkipOnConfirmation: true,
 			ConfirmFn:          confirmFn,
 		},
+		notifier: note,
 	}, nil
 }
 
@@ -142,6 +124,15 @@ func (mgr *Manager) recordHistory(action string, version uint) {
 	)
 	if err != nil {
 		mgr.logger.WithError(err).Warn("failed to record history")
+	}
+}
+
+func (mgr *Manager) notifyEvent(event notifier.MigrationEvent) {
+	if mgr.notifier == nil {
+		return
+	}
+	if err := mgr.notifier.Notify(event); err != nil {
+		mgr.logger.WithError(err).Warn("failed to send notification")
 	}
 }
 
@@ -282,8 +273,21 @@ func (mgr *Manager) Up() error {
 	// 4. Thực thi migrate Up
 	start := time.Now()
 	err = mgr.withRetry(mgr.m.Up)
-	migrationDuration.Observe(time.Since(start).Seconds())
+	duration := time.Since(start)
 	after, dirtyAfter, _ := mgr.m.Version()
+	status := "success"
+	if err != nil {
+		status = "fail"
+	}
+	mgr.notifyEvent(notifier.MigrationEvent{
+		Status:   status,
+		User:     mgr.actor,
+		Version:  fmt.Sprintf("%d", after),
+		DB:       mgr.backend.DriverName(),
+		Duration: duration,
+		Error:    err,
+		Time:     time.Now(),
+	})
 
 	// 5. Ghi lại history với hash từng file vừa apply (từ before+1 đến after)
 	if err == nil && after > before {
@@ -356,9 +360,24 @@ func (mgr *Manager) Down() error {
 
 	start := time.Now()
 	err = mgr.withRetry(mgr.m.Down)
-	migrationDuration.Observe(time.Since(start).Seconds())
+	duration := time.Since(start)
 
 	after, dirtyAfter, _ := mgr.m.Version()
+	status := "success"
+	if err != nil {
+		status = "fail"
+	} else if before > after {
+		status = "rollback"
+	}
+	mgr.notifyEvent(notifier.MigrationEvent{
+		Status:   status,
+		User:     mgr.actor,
+		Version:  fmt.Sprintf("%d", after),
+		DB:       mgr.backend.DriverName(),
+		Duration: duration,
+		Error:    err,
+		Time:     time.Now(),
+	})
 	switch {
 	case err != nil:
 		mgr.logger.WithError(err).
@@ -373,7 +392,6 @@ func (mgr *Manager) Down() error {
 			"to":    after,
 			"actor": mgr.actor,
 		}).Info("migrations rolled back (Down)")
-		migrationsRollback.Add(float64(before - after))
 		mgr.recordHistory("down", after)
 	default:
 		mgr.logger.WithField("actor", mgr.actor).Info("no migrations to roll back (Down)")
@@ -422,9 +440,24 @@ func (mgr *Manager) Steps(n int) error {
 
 	start := time.Now()
 	err = mgr.withRetry(func() error { return mgr.m.Steps(n) })
-	migrationDuration.Observe(time.Since(start).Seconds())
+	duration := time.Since(start)
 
 	after, dirtyAfter, _ := mgr.m.Version()
+	status := "success"
+	if err != nil {
+		status = "fail"
+	} else if after < before {
+		status = "rollback"
+	}
+	mgr.notifyEvent(notifier.MigrationEvent{
+		Status:   status,
+		User:     mgr.actor,
+		Version:  fmt.Sprintf("%d", after),
+		DB:       mgr.backend.DriverName(),
+		Duration: duration,
+		Error:    err,
+		Time:     time.Now(),
+	})
 	switch {
 	case err != nil:
 		return err
@@ -436,7 +469,6 @@ func (mgr *Manager) Steps(n int) error {
 			"to":    after,
 			"actor": mgr.actor,
 		}).Infof("migrations applied %d steps", n)
-		migrationsApplied.Add(float64(after - before))
 		mgr.recordHistory("up", after)
 	case before > after:
 		mgr.logger.WithFields(logrus.Fields{
@@ -444,7 +476,6 @@ func (mgr *Manager) Steps(n int) error {
 			"to":    after,
 			"actor": mgr.actor,
 		}).Infof("migrations rolled back %d steps", -n)
-		migrationsRollback.Add(float64(before - after))
 		mgr.recordHistory("rollback", after)
 	default:
 		mgr.logger.WithField("actor", mgr.actor).Info("no effect from Steps migration")

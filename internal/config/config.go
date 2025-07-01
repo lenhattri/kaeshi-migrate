@@ -1,5 +1,7 @@
 package config
 
+import "github.com/lenhattri/kaeshi-migrate/notifier"
+
 // Config represents application configuration loaded from file or environment.
 type Config struct {
 	Env      string `mapstructure:"env" yaml:"env"`
@@ -21,4 +23,5 @@ type Config struct {
 			Queue string `mapstructure:"queue" yaml:"queue"`
 		} `mapstructure:"rabbitmq" yaml:"rabbitmq"`
 	} `mapstructure:"logging" yaml:"logging"`
+	Notifier notifier.Config `mapstructure:"notifier" yaml:"notifier"`
 }
