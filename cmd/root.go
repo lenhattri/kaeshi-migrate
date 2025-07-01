@@ -11,6 +11,7 @@ var (
 	yesFlag        bool
 	configPathFlag string
 	migrationsFlag string
+	noNotifyFlag   bool
 	rootCmd        *cobra.Command
 )
 
@@ -25,6 +26,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().BoolVarP(&yesFlag, "yes", "y", false, "automatic yes to prompts")
 	rootCmd.PersistentFlags().StringVar(&configPathFlag, "config", "configs/config.yml", "config file path")
 	rootCmd.PersistentFlags().StringVar(&migrationsFlag, "migrations", "migrations", "migrations directory")
+	rootCmd.PersistentFlags().BoolVar(&noNotifyFlag, "no-notify", false, "disable notifications")
 	return rootCmd
 }
 
@@ -48,3 +50,6 @@ func ConfigPath() string { return configPathFlag }
 
 // MigrationsDir returns the migrations directory from the global flag.
 func MigrationsDir() string { return migrationsFlag }
+
+// NoNotify returns whether notifications are disabled by flag.
+func NoNotify() bool { return noNotifyFlag }

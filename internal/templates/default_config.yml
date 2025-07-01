@@ -20,3 +20,14 @@ logging:
   rabbitmq:
     url: "amqp://guest:guest@localhost:5672/"
     queue: "logging"
+
+notifier:
+  enabled: false
+  type: webhook
+  discord:
+    webhook_url: ""
+  slack:
+    webhook_url: ""
+  webhook:
+    url: ""
+    headers: {}
