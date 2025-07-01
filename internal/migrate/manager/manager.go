@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -106,6 +109,10 @@ func (mgr *Manager) VersionCommitted(v uint) (bool, error) {
 	if err == sql.ErrNoRows {
 		return false, nil
 	}
+	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "42P01" {
+		// migrations_history table does not exist yet (first run)
+		return false, nil
+	}
 	if err != nil {
 		return false, err
 	}
@@ -131,6 +138,15 @@ func (mgr *Manager) notifyEvent(event notifier.MigrationEvent) {
 	if mgr.notifier == nil {
 		return
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			mgr.logger.WithFields(logrus.Fields{
+				"component":   "notifier",
+				"panic":       r,
+				"error.stack": string(debug.Stack()),
+			}).Error("notifier panic")
+		}
+	}()
 	if err := mgr.notifier.Notify(event); err != nil {
 		mgr.logger.WithError(err).Warn("failed to send notification")
 	}
