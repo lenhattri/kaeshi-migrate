@@ -1,6 +1,6 @@
 package config
 
-import "github.com/lenhattri/kaeshi-migrate/notifier"
+import "github.com/lenhattri/kaeshi-migrate/internal/notifier"
 
 // Config represents application configuration loaded from file or environment.
 type Config struct {

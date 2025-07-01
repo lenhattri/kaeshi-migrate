@@ -15,7 +15,7 @@ import (
 	"github.com/lenhattri/kaeshi-migrate/internal/config"
 	migration "github.com/lenhattri/kaeshi-migrate/internal/migrate"
 	mgmt "github.com/lenhattri/kaeshi-migrate/internal/migrate/manager"
-	"github.com/lenhattri/kaeshi-migrate/notifier"
+	"github.com/lenhattri/kaeshi-migrate/internal/notifier"
 	"github.com/lenhattri/kaeshi-migrate/pkg/logger"
 	"github.com/sirupsen/logrus"
 )

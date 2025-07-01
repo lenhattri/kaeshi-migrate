@@ -13,7 +13,7 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/lenhattri/kaeshi-migrate/notifier"
+	"github.com/lenhattri/kaeshi-migrate/internal/notifier"
 	"github.com/sirupsen/logrus"
 
 	"github.com/lenhattri/kaeshi-migrate/pkg/validate"
