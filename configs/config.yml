@@ -6,7 +6,7 @@ user: "lenhattri"
 database:
   driver: postgres
   # DSN: e.g. postgres://user:pass@host:5432/db?sslmode=disable
-  dsn: "postgres://user:pass@host:5432/db?sslmode=disable"
+  dsn: "postgres://fuelmet:MitelAI%40FuelmetDev%23123@203.210.232.136:5432/fuelmetdb?sslmode=disable"
 
 # Logging settings
 logging:
@@ -22,10 +22,10 @@ logging:
     queue: "logging"
 
 notifier:
-  enabled: false
+  enabled: true
   type: webhook
   discord:
-    webhook_url: ""
+    webhook_url: "https://discord.com/api/webhooks/1389501920976310343/AJ0ndCG-pSwxFET-C3JywjgI1hmj8vDtRZyaGKkvpeshQEmsapZ-nokZPKou2FRg-lBy"
   slack:
     webhook_url: ""
   webhook:

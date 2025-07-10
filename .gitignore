@@ -65,3 +65,5 @@ go.work.sum
 .watchmanconfig
 *.iml
 coverage.out
+
+migrations/
