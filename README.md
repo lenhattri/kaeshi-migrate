@@ -9,7 +9,7 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 
 ## Dependencies
 
-- Go 1.23.4 or newer
+- Go 1.24.3 or newer
 - PostgreSQL, MySQL, or SQLite (as your database)
 - Kafka or RabbitMQ (optional, for advanced logging)
 - Optional webhook notifications (Discord, Slack, generic)
@@ -33,7 +33,7 @@ It builds upon [golang-migrate](https://github.com/golang-migrate/migrate), addi
 ### 0. Install Go on Linux/macOS (optional)
 
 ```bash
-curl -LO https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
+curl -LO https://go.dev/dl/go1.24.3.linux-amd64.tar.gz
 sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 ````
